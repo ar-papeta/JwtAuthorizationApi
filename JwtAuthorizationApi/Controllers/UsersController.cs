@@ -1,47 +1,81 @@
-﻿using Microsoft.AspNetCore.Mvc;
-
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+﻿using AutoMapper;
+using BLL.Models;
+using BLL.Services.Interfaces;
+using JwtAuthorizationApi.Services.Auth.Authentication;
+using JwtAuthorizationApi.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace JwtAuthorizationApi.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     public class UsersController : ControllerBase
     {
-        public UsersController()
-        {
+        private readonly ITokenFactory _tokenFactory;
+        private readonly IUsersService _service;
+        private readonly IMapper _mapper;
 
+        public UsersController(
+            IUsersService service, 
+            ITokenFactory tokenFactory,
+            IMapper mapper)
+        {
+            _service = service;
+            _tokenFactory = tokenFactory;
+            _mapper = mapper;
         }
 
-        // GET: api/<UsersController>
-        [HttpGet]
-        public IEnumerable<string> Get()
-        {
-            return new string[] { "value1", "value2" };
-        }
-
-        // GET api/<UsersController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
-        {
-            return "value";
-        }
-
-        // POST api/<UsersController>
         [HttpPost]
-        public void Post([FromBody] string value)
+        [Route("~/actions/login")]
+        public IActionResult ValidateUser([FromBody] AuthenticationRequest userAuthData)
         {
+            var userDto = _mapper.Map<UserDto>(userAuthData);
+            var user = _service.ValidateUser(userDto);
+
+            var token = _tokenFactory.CreateToken(user.Id.ToString(), user.Role.ToString());
+
+            return Ok(new AuthenticateResponce() { Token = token, UserName = user.Name, UserRole = user.Role.ToString() });
         }
 
-        // PUT api/<UsersController>/5
+        // GET: /Users
+        [HttpGet]
+        [Authorize("user:read")]
+        public IActionResult Get()
+        {
+            var usersDto = _service.GetUsers();
+            var users = _mapper.Map<List<UserDto>, List<UserViewModel>>(usersDto.ToList());
+            
+            return Ok(users);
+        }
+
+        // GET /Users/5
+        [HttpGet("{id}")]
+        [Authorize("user:read")]
+        public string Get(Guid id)
+        {
+            return "Method not implemented";
+        }
+
+        // POST /Users
+        [HttpPost]
+        public IActionResult Post([FromBody] UserDto userDto)
+        {
+            var user = _service.CreateUser(userDto);
+            var token = _tokenFactory.CreateToken(user.Id.ToString(), user.Role.ToString());
+
+            return Ok(new AuthenticateResponce() { Token = token, UserName = user.Name, UserRole = user.Role.ToString() });
+        }
+
+        // PUT /Users/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        public void Put(Guid id, [FromBody] string value)
         {
         }
 
-        // DELETE api/<UsersController>/5
+        // DELETE /Users/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public void Delete(Guid id)
         {
         }
     }
