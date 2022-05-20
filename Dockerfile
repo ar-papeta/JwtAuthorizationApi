@@ -8,6 +8,8 @@ EXPOSE 443
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
 COPY ["JwtAuthorizationApi/JwtAuthorizationApi.csproj", "JwtAuthorizationApi/"]
+COPY ["BLL/BLL.csproj", "BLL/"]
+COPY ["DAL/DAL.csproj", "DAL/"]
 RUN dotnet restore "JwtAuthorizationApi/JwtAuthorizationApi.csproj"
 COPY . .
 WORKDIR "/src/JwtAuthorizationApi"

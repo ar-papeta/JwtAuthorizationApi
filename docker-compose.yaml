@@ -1,0 +1,24 @@
+﻿version: "3.4"
+services: 
+  jwtauthorizationapi:
+    build:
+      context: .
+    ports:
+      - "7001:80"
+    networks:
+      - jwtpostgre
+    environment: 
+      DB_CONNECTION_STRING: "Host=db;Port=5432;Database=usersdb;Username=postgres;Password=7811"
+  db:
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "7811"
+      POSTGRES_DB: "usersdb"
+    networks:
+      - jwtpostgre
+networks:
+  jwtpostgre:
+    driver: bridge

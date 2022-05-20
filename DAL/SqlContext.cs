@@ -8,7 +8,10 @@ public class SqlContext : DbContext
     public DbSet<User> Users { get; set; }
 
     public SqlContext(DbContextOptions<SqlContext> options)
-            : base(options) { }
+            : base(options) 
+    {
+        Database.EnsureCreated();
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
