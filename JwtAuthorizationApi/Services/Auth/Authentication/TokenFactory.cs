@@ -29,7 +29,7 @@ namespace JwtAuthorizationApi.Services.Auth.Authentication
                 _configuration.GetSection("Jwt:Issuer").Value,
                 _configuration.GetSection("Jwt:Audience").Value,
                 claims,
-                expires: DateTime.MaxValue,
+                expires: DateTime.UtcNow.AddSeconds(30),
                 signingCredentials: credetials);
 
             return new JwtSecurityTokenHandler().WriteToken(tokenDescriptor);

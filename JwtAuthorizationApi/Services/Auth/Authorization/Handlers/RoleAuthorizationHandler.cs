@@ -44,6 +44,7 @@ public class RoleAuthorizationHandler : AuthorizationHandler<RoleAuthorizationRe
     private bool IsUserEditAuthorized(AuthorizationHandlerContext context)
     {
         var role = context.User.FindFirst(ClaimTypes.Role)?.Value;
+
         if (role == "Admin")
         {
             return true;
