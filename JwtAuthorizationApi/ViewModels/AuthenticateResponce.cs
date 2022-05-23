@@ -1,15 +1,18 @@
-﻿using System.Text.Json.Serialization;
+﻿using BLL.Models;
+using System.Text.Json.Serialization;
 
 namespace JwtAuthorizationApi.ViewModels;
 
 public class AuthenticateResponce
 {
-    [JsonPropertyName("token")]
-    public string Token { get; set; }
+    [JsonPropertyName("access_token")]
+    public string AccessToken { get; set; }
 
-    [JsonPropertyName("user_name")]
-    public string UserName { get; set; }
+    [JsonPropertyName("refresh_token")]
+    public string RefreshToken { get; set; }
 
-    [JsonPropertyName("user_role")]
-    public string UserRole { get; set; }
+    public UserDto UserDto { get; set; }
+
+
+
 }

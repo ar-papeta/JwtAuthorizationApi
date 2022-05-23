@@ -10,6 +10,7 @@ using JwtAuthorizationApi.Services.Auth.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using JwtAuthorizationApi.Services.Auth.Authorization.Handlers;
 using Microsoft.OpenApi.Models;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +26,7 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "JwtAuth", Version = "v1" });
 });
+builder.Services.AddCors();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 {
@@ -58,6 +60,8 @@ var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 app.UseHttpsRedirection();
+
+app.UseCors(cors => cors.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
 
 if (app.Environment.IsDevelopment())
 {

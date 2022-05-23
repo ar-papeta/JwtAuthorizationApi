@@ -4,7 +4,7 @@ namespace BLL.Models;
 
 public class UserDto
 {
-    [JsonIgnore]
+    [JsonPropertyName("id")]
     public Guid Id { get; set; }
 
     [JsonPropertyName("email")]
@@ -13,7 +13,7 @@ public class UserDto
     [JsonPropertyName("name")]
     public string Name { get; set; }
 
-    [JsonPropertyName("password")]
+    [JsonIgnore]
     public string Password { get; set; }
 
     [JsonPropertyName("role")]

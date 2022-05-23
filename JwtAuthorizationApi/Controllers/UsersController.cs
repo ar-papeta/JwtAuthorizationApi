@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace JwtAuthorizationApi.Controllers
 {
-    [Route("[controller]")]
+    [Route("api/users")]
     [ApiController]
     public class UsersController : ControllerBase
     {
@@ -27,7 +27,7 @@ namespace JwtAuthorizationApi.Controllers
         }
 
         [HttpPost]
-        [Route("~/actions/login")]
+        [Route("~/api/login")]
         public IActionResult ValidateUser([FromBody] AuthenticationRequest userAuthData)
         {
             var userDto = _mapper.Map<UserDto>(userAuthData);
@@ -35,7 +35,7 @@ namespace JwtAuthorizationApi.Controllers
 
             var token = _tokenFactory.CreateToken(user.Id.ToString(), user.Role.ToString());
 
-            return Ok(new AuthenticateResponce() { Token = token, UserName = user.Name, UserRole = user.Role.ToString() });
+            return Ok(new AuthenticateResponce() { AccessToken = token, UserDto = userDto });
         }
 
         // GET: /Users
@@ -44,9 +44,8 @@ namespace JwtAuthorizationApi.Controllers
         public IActionResult Get()
         {
             var usersDto = _service.GetUsers();
-            var users = _mapper.Map<List<UserDto>, List<UserViewModel>>(usersDto.ToList());
-            
-            return Ok(users);
+
+            return Ok(usersDto);
         }
 
         // GET /Users/5
@@ -59,12 +58,13 @@ namespace JwtAuthorizationApi.Controllers
 
         // POST /Users
         [HttpPost]
+        [Route("~/api/registration")]
         public IActionResult Post([FromBody] UserDto userDto)
         {
             var user = _service.CreateUser(userDto);
             var token = _tokenFactory.CreateToken(user.Id.ToString(), user.Role.ToString());
 
-            return Ok(new AuthenticateResponce() { Token = token, UserName = user.Name, UserRole = user.Role.ToString() });
+            return Ok(new AuthenticateResponce() { AccessToken = token, UserDto = userDto });
         }
 
         // PUT /Users/5
