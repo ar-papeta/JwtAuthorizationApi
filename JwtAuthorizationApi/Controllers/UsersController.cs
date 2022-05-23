@@ -33,9 +33,13 @@ namespace JwtAuthorizationApi.Controllers
             var userDto = _mapper.Map<UserDto>(userAuthData);
             var user = _service.ValidateUser(userDto);
 
-            var token = _tokenFactory.CreateToken(user.Id.ToString(), user.Role.ToString());
+            var token = _tokenFactory.CreateJwtToken(user.Id.ToString(), user.Role.ToString());
 
-            return Ok(new AuthenticateResponce() { AccessToken = token, UserDto = userDto });
+            return Ok(new AuthenticateResponce() 
+            { 
+                AccessToken = token, 
+                UserViewModel = _mapper.Map<UserViewModel>(userDto)
+            });
         }
 
         // GET: /Users
@@ -45,7 +49,7 @@ namespace JwtAuthorizationApi.Controllers
         {
             var usersDto = _service.GetUsers();
 
-            return Ok(usersDto);
+            return Ok(_mapper.Map<List<UserViewModel>>(usersDto));
         }
 
         // GET /Users/5
@@ -62,9 +66,13 @@ namespace JwtAuthorizationApi.Controllers
         public IActionResult Post([FromBody] UserDto userDto)
         {
             var user = _service.CreateUser(userDto);
-            var token = _tokenFactory.CreateToken(user.Id.ToString(), user.Role.ToString());
+            var token = _tokenFactory.CreateJwtToken(user.Id.ToString(), user.Role.ToString());
 
-            return Ok(new AuthenticateResponce() { AccessToken = token, UserDto = userDto });
+            return Ok(new AuthenticateResponce()
+            {
+                AccessToken = token,
+                UserViewModel = _mapper.Map<UserViewModel>(userDto)
+            });
         }
 
         // PUT /Users/5

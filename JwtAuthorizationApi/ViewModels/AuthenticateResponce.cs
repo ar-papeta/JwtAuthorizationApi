@@ -11,7 +11,8 @@ public class AuthenticateResponce
     [JsonPropertyName("refresh_token")]
     public string RefreshToken { get; set; }
 
-    public UserDto UserDto { get; set; }
+    [JsonPropertyName("user")]
+    public UserViewModel UserViewModel { get; set; }
 
 
 

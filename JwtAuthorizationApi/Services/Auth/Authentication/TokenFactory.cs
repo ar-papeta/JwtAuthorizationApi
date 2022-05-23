@@ -13,7 +13,7 @@ namespace JwtAuthorizationApi.Services.Auth.Authentication
             _configuration = configuration;
         }
 
-        public string CreateToken(string userId, string userRole)
+        public string CreateJwtToken(string userId, string userRole)
         {
             var claims = new[]
             {

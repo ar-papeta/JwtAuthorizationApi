@@ -11,7 +11,10 @@ public class MappingProfile : Profile
     {
         CreateMap<User, UserDto>();
         CreateMap<UserDto, User>();
-        
+
+        CreateMap<UserViewModel, UserDto>();
+        CreateMap<UserDto, UserViewModel>();
+
         CreateMap<AuthenticationRequest, UserDto>();
         CreateMap<UserDto, AuthenticationRequest>();
     }
