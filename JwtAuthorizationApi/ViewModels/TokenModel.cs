@@ -1,7 +1,12 @@
-﻿namespace JwtAuthorizationApi.ViewModels;
+﻿using System.Text.Json.Serialization;
+
+namespace JwtAuthorizationApi.ViewModels;
 
 public class TokenModel
 {
-    public string? AccessToken { get; set; }
-    public string? RefreshToken { get; set; }
+    [JsonPropertyName("access_token")]
+    public string AccessToken { get; set; }
+
+    [JsonPropertyName("refresh_token")]
+    public string RefreshToken { get; set; }
 }

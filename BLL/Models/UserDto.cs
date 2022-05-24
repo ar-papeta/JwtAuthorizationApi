@@ -16,7 +16,7 @@ public class UserDto
     [JsonPropertyName("password")]  
     public string Password { get; set; }
 
-    [JsonIgnore]
+    [JsonPropertyName("role")]
     public string Role { get; set; }
 }
 

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BLL.Models;
 using BLL.Services.Interfaces;
+using JwtAuthorizationApi.Services.Auth;
 using JwtAuthorizationApi.Services.Auth.Authentication;
 using JwtAuthorizationApi.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -12,17 +13,17 @@ namespace JwtAuthorizationApi.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private readonly ITokenFactory _tokenFactory;
+        private readonly IAuthService _authService;
         private readonly IUsersService _service;
         private readonly IMapper _mapper;
 
         public UsersController(
             IUsersService service, 
-            ITokenFactory tokenFactory,
+            IAuthService authService,
             IMapper mapper)
         {
             _service = service;
-            _tokenFactory = tokenFactory;
+            _authService = authService;
             _mapper = mapper;
         }
 
@@ -30,15 +31,17 @@ namespace JwtAuthorizationApi.Controllers
         [Route("~/api/login")]
         public IActionResult ValidateUser([FromBody] AuthenticationRequest userAuthData)
         {
-            var userDto = _mapper.Map<UserDto>(userAuthData);
-            var user = _service.ValidateUser(userDto);
+            var user = _service.ValidateUser(_mapper.Map<UserDto>(userAuthData));
 
-            var token = _tokenFactory.CreateJwtToken(user.Id.ToString(), user.Role.ToString());
+            var tokens = _authService.CreateNewTokenModel(user.Id.ToString(), user.Role.ToString());
 
+            Response.Cookies.Append("RefreshToken", tokens.RefreshToken, new CookieOptions() { HttpOnly = true });
+       
             return Ok(new AuthenticateResponce() 
             { 
-                AccessToken = token, 
-                UserViewModel = _mapper.Map<UserViewModel>(userDto)
+                AccessToken = tokens.AccessToken,
+                RefreshToken = tokens.RefreshToken,
+                UserViewModel = _mapper.Map<UserViewModel>(user)
             });
         }
 
@@ -60,20 +63,56 @@ namespace JwtAuthorizationApi.Controllers
             return "Method not implemented";
         }
 
+        // GET /Logout
+        [HttpGet()]
+        [Route("~/api/logout")]
+        public IActionResult Logout()
+        {
+            if (Request.Cookies.ContainsKey("RefreshToken"))
+            {
+                Response.Cookies.Delete("RefreshToken", new CookieOptions() { Expires = DateTime.Now.AddDays(-1d) });
+            }
+            return Ok();
+        }
+
         // POST /Users
         [HttpPost]
         [Route("~/api/registration")]
         public IActionResult Post([FromBody] UserDto userDto)
         {
             var user = _service.CreateUser(userDto);
-            var token = _tokenFactory.CreateJwtToken(user.Id.ToString(), user.Role.ToString());
+            var tokens = _authService.CreateNewTokenModel(user.Id.ToString(), user.Role.ToString());
 
+            Response.Cookies.Append("RefreshToken", tokens.RefreshToken, new CookieOptions() { HttpOnly = true });
             return Ok(new AuthenticateResponce()
             {
-                AccessToken = token,
+                AccessToken = tokens.AccessToken,
+                RefreshToken = tokens.RefreshToken,
                 UserViewModel = _mapper.Map<UserViewModel>(userDto)
             });
         }
+
+        // POST /Users
+        [HttpPost]
+        [Route("~/api/auth/refresh")]
+        public IActionResult Refresh([FromBody] RefreshRequest request)
+        {
+            TokenModel model = new()
+            {
+                AccessToken = request.AccessToken
+            };
+
+            if (Request.Cookies.ContainsKey("RefreshToken"))
+            {
+                model.RefreshToken = Request.Cookies["RefreshToken"]!;
+            }
+
+            var tokens = _authService.RefreshTokens(model);
+
+            Response.Cookies.Append("RefreshToken", tokens.RefreshToken, new CookieOptions() { HttpOnly = true });
+            return Ok(tokens);
+        }
+
 
         // PUT /Users/5
         [HttpPut("{id}")]

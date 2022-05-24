@@ -2,5 +2,6 @@
 
 public interface ITokenFactory
 {
-    public string CreateJwtToken(string userId, string userRole);
+    public string CreateJwtAccessToken(string userId, string userRole);
+    public string CreateJwtRefreshToken();
 }

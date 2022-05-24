@@ -10,7 +10,7 @@ public class SqlContext : DbContext
     public SqlContext(DbContextOptions<SqlContext> options)
             : base(options) 
     {
-        Database.EnsureCreated();
+        //Database.EnsureCreated();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -23,7 +23,7 @@ public class SqlContext : DbContext
             EMail = "artem@gmail.com",
             Name = "Artem",
             Role = RoleNames.Admin,
-            Password = "Owve1iNLlEKKrO3hQplQLBNN3TfIkzMEXwF8EkikVN4="
+            Password = "Owve1iNLlEKKrO3hQplQLBNN3TfIkzMEXwF8EkikVN4=",
         };
 
         modelBuilder.Entity<User>().HasData(initialUserAdmin);

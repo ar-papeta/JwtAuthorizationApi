@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.Authorization;
 using JwtAuthorizationApi.Services.Auth.Authorization.Handlers;
 using Microsoft.OpenApi.Models;
 using Microsoft.Extensions.DependencyInjection;
+using JwtAuthorizationApi.Services.Auth;
+using JwtAuthorizationApi.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +21,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRepository(builder.Configuration);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ITokenFactory, TokenFactory>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAuthorizationHandler, RoleAuthorizationHandler>();
 builder.Services.AddBll();
 builder.Services.AddAutoMapper(typeof(MappingProfile));
@@ -38,7 +41,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
         ValidateIssuerSigningKey = true,
         ValidIssuer = builder.Configuration.GetJwtIssuer(),
         ValidAudience = builder.Configuration.GetJwtAudience(),
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetJwtKey())),
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetJwtAccessKey())),
         ClockSkew = TimeSpan.Zero
     };
 });
@@ -61,6 +64,7 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 app.UseHttpsRedirection();
 
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -73,7 +77,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseRouting();
 
-app.UseCors(cors => cors.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+app.UseCors(cors => cors.AllowAnyHeader().AllowAnyMethod().AllowCredentials().WithOrigins("http://localhost:3000"));
 
 app.UseAuthentication();
 

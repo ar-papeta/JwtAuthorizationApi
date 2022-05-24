@@ -24,50 +24,56 @@ namespace JwtAuthorizationApi.Services.Auth
             _database = database;
         }
 
-        public string CreateAccessToken(string userId, string userRole)
+        public TokenModel CreateNewTokenModel(string userId, string userRole)
         {
-            return _tokenFactory.CreateJwtToken(userId, userRole);
+            return new()
+            {
+                AccessToken = _tokenFactory.CreateJwtAccessToken(userId, userRole),
+                RefreshToken = _tokenFactory.CreateJwtRefreshToken()
+            };
         }
 
-        public string RefreshToken(TokenModel tokenModel)
+        public TokenModel RefreshTokens(TokenModel tokenModel)
         {
             if (tokenModel is null)
             {
                 throw new ArgumentNullException(nameof(tokenModel));
             }
 
-            var principal = GetPrincipalFromExpiredToken(tokenModel.AccessToken);
+            _ = GetPrincipalFromToken(tokenModel.RefreshToken, _configuration.GetJwtRefreshKey(), true) 
+                ?? throw new SecurityTokenException("Incoming refresh token is not correct (principals is null)");
 
-            if (principal == null)
-            {
-                throw new ArgumentNullException(nameof(principal));
-            }
+            var principal = GetPrincipalFromToken(tokenModel.AccessToken, _configuration.GetJwtAccessKey(), false)
+                ?? throw new SecurityTokenException("Incoming access token is not correct (principals is null)");
 
-            var user = _database.Users.GetByID(Guid.Parse(principal.Claims.First(c => c.ValueType == ClaimTypes.NameIdentifier).Value)); 
+            var userId = Guid.Parse(principal.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value);
+            var user = _database.Users.Get(x => x.Id == userId).First();
 
-
-
-            return string.Empty;
+            return CreateNewTokenModel(user.Id.ToString(), user.Role.ToString());
         }
 
-        private ClaimsPrincipal? GetPrincipalFromExpiredToken(string? token)
+        private ClaimsPrincipal? GetPrincipalFromToken(string? token, string key, bool validateLifeTime)
         {
             var tokenValidationParameters = new TokenValidationParameters
             {
                 ValidateAudience = false,
                 ValidateIssuer = false,
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetJwtKey())),
-                ValidateLifetime = false
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+                ValidateLifetime = validateLifeTime
             };
 
             var tokenHandler = new JwtSecurityTokenHandler();
+
             var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
-            if (securityToken is not JwtSecurityToken jwtSecurityToken || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+
+            var jwt = securityToken as JwtSecurityToken ?? throw new SecurityTokenException("Invalid access token "); ;
+            if (!jwt.Header.Alg.Equals(SecurityAlgorithms.HmacSha256Signature, StringComparison.InvariantCultureIgnoreCase))
+            {
                 throw new SecurityTokenException("Invalid access token principals");
-
+            }
+            
             return principal;
-
         }
     }
 }
