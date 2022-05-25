@@ -88,8 +88,8 @@ namespace JwtAuthorizationApi.Controllers
             {
                 AccessToken = tokens.AccessToken,
                 RefreshToken = tokens.RefreshToken,
-                UserViewModel = _mapper.Map<UserViewModel>(userDto)
-            });
+                UserViewModel = _mapper.Map<UserViewModel>(user)
+        });
         }
 
         // POST /Users
