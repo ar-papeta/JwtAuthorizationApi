@@ -10,7 +10,7 @@ public static class DependencyInjection
     {
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddDbContext<SqlContext>(opt => opt
-            .UseNpgsql(configuration.GetConnectionString("PostgreSQLConnection")));
+            .UseSqlServer(configuration.GetConnectionString("MSSQLConnection")));
         return services;
     }
 }

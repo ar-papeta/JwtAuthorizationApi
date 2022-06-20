@@ -12,6 +12,5 @@ public class User
     public string Name { get; set; }
     public RoleNames Role { get; set; }
     public string Password { get; set; }
-    public RefreshToken RefreshToken { get; set; }
 }
 
