@@ -10,15 +10,17 @@ using JwtAuthorizationApi.Services.Auth.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using JwtAuthorizationApi.Services.Auth.Authorization.Handlers;
 using Microsoft.OpenApi.Models;
-using Microsoft.Extensions.DependencyInjection;
 using JwtAuthorizationApi.Services.Auth;
 using JwtAuthorizationApi.Middlewares;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
 
 // Add services to the container.
-builder.Services.AddRepository(builder.Configuration);
+
+builder.Services.Configure<MongoDbConfig>(builder.Configuration.GetSection("SensorsNoSqlDatabase"));
+builder.Services.AddRepository();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ITokenFactory, TokenFactory>();
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -53,6 +55,9 @@ builder.Services.AddAuthorization(options =>
         options.AddPolicy(permission, builder =>
             builder.AddRequirements(new RoleAuthorizationRequiment(permission)));
     }
+    options.AddPolicy("OnlyForAdmin", policy => {
+        policy.RequireClaim(ClaimTypes.Role, "Admin");
+    });
 });
 
 builder.Services.AddControllers();
@@ -65,15 +70,22 @@ var app = builder.Build();
 app.UseHttpsRedirection();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
-if (app.Environment.IsDevelopment())
+
+app.MapWhen(context => context.Request.Path.StartsWithSegments("/api/sensorsdata") && context.Request.Method is "POST", sensorDataApi =>
 {
-    app.UseSwagger();
+    sensorDataApi.UseMiddleware<SensorDataApiMiddleware>(builder.Configuration.GetApiKey());
+});
+        
+
+//if (app.Environment.IsDevelopment())
+//{
+app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
         options.RoutePrefix = "";
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "Jwt v1");
     });
-}
+//}
 
 app.UseRouting();
 

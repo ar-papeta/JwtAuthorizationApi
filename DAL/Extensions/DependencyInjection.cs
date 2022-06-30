@@ -1,4 +1,4 @@
-﻿using DAL.Uow;
+﻿using DAL.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -6,11 +6,9 @@ using Microsoft.Extensions.DependencyInjection;
 namespace DAL.Extensions;
 public static class DependencyInjection
 {
-    public static IServiceCollection AddRepository(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddRepository(this IServiceCollection services)
     {
-        services.AddScoped<IUnitOfWork, UnitOfWork>();
-        services.AddDbContext<SqlContext>(opt => opt
-            .UseNpgsql(configuration.GetConnectionString("PostgreSQLConnection")));
+        services.AddScoped(typeof(IMongoRepository<>), typeof(MongoRepository<>));
         return services;
     }
 }

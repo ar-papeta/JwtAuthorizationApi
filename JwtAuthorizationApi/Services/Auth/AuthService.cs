@@ -1,7 +1,10 @@
-﻿using DAL.Uow;
+﻿using DAL.Entities;
+using DAL.Extensions;
+using DAL.Repositories;
 using JwtAuthorizationApi.Services.Auth.Authentication;
 using JwtAuthorizationApi.Services.Extentions;
 using JwtAuthorizationApi.ViewModels;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -13,15 +16,17 @@ namespace JwtAuthorizationApi.Services.Auth
     {
         private readonly ITokenFactory _tokenFactory;
         private readonly IConfiguration _configuration;
-        private readonly IUnitOfWork _database;
+        private readonly IMongoRepository<User> _database;
         public AuthService(
             ITokenFactory tokenFactory, 
             IConfiguration configuration,
-            IUnitOfWork database)
+            IMongoRepository<User> database,
+            IOptions<MongoDbConfig> dbOptions)
         {
             _tokenFactory = tokenFactory;
             _configuration = configuration;
             _database = database;
+            _database.UseCollection(dbOptions.Value.UsersCollectionName);
         }
 
         public TokenModel CreateNewTokenModel(string userId, string userRole)
@@ -46,10 +51,11 @@ namespace JwtAuthorizationApi.Services.Auth
             var principal = GetPrincipalFromToken(tokenModel.AccessToken, _configuration.GetJwtAccessKey(), false)
                 ?? throw new SecurityTokenException("Incoming access token is not correct (principals is null)");
 
-            var userId = Guid.Parse(principal.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value);
-            var user = _database.Users.Get(x => x.Id == userId).First();
+            var userId = principal.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value;
+            var user = _database.FilterBy(x => x.Id == userId).FirstOrDefault() 
+                ?? throw new SecurityTokenException("The user with such id from token no longer exists");
 
-            return CreateNewTokenModel(user.Id.ToString(), user.Role.ToString());
+            return CreateNewTokenModel(user.Id, user.Role);
         }
 
         private ClaimsPrincipal? GetPrincipalFromToken(string? token, string key, bool validateLifeTime)

@@ -1,17 +1,11 @@
 ﻿namespace DAL.Entities;
-public enum RoleNames
+
+public class User : IDocument
 {
-    Admin,
-    Manager,
-    User,
-}
-public class User 
-{
-    public Guid Id { get; set; }
-    public string EMail { get; set; }
-    public string Name { get; set; }
-    public RoleNames Role { get; set; }
-    public string Password { get; set; }
-    public RefreshToken RefreshToken { get; set; }
+    public string Id { get; set; } = null!;
+    public string EMail { get; set; } = null!;
+    public string Name { get; set; } = null!;
+    public string Role { get; set; } = null!;
+    public string Password { get; set; } = null!;
 }
 

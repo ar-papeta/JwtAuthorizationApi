@@ -1,4 +1,5 @@
-﻿using JwtAuthorizationApi.Services.Auth.Authorization.Requirements;
+﻿using BLL.Services;
+using JwtAuthorizationApi.Services.Auth.Authorization.Requirements;
 using JwtAuthorizationApi.Services.Extentions;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
@@ -9,11 +10,13 @@ public class RoleAuthorizationHandler : AuthorizationHandler<RoleAuthorizationRe
 {
     private readonly IConfiguration _configuration;
     private readonly IHttpContextAccessor _contextAccessor;
+    private readonly SensorsService _sensorService;
 
-    public RoleAuthorizationHandler(IConfiguration configuration, IHttpContextAccessor contextAccessor)
+    public RoleAuthorizationHandler(IConfiguration configuration, IHttpContextAccessor contextAccessor, SensorsService sensorsService)
     {
         _configuration = configuration;
         _contextAccessor = contextAccessor;
+        _sensorService = sensorsService;
     }
 
     protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, RoleAuthorizationRequiment requirement)
@@ -28,6 +31,13 @@ public class RoleAuthorizationHandler : AuthorizationHandler<RoleAuthorizationRe
                 if (requirement.Permission == "user:write")
                 {
                     if (IsUserEditAuthorized(context))
+                    {
+                        context.Succeed(requirement);
+                    }
+                } 
+                else if(requirement.Permission == "sensor:read")
+                {
+                    if (IsSensorReadAuthorized(context))
                     {
                         context.Succeed(requirement);
                     }
@@ -56,5 +66,28 @@ public class RoleAuthorizationHandler : AuthorizationHandler<RoleAuthorizationRe
         }
 
         return false; 
+    }
+    private bool IsSensorReadAuthorized(AuthorizationHandlerContext context)
+    {
+        var role = context.User.FindFirst(ClaimTypes.Role)?.Value;
+
+        if (role == "Admin")
+        {
+            return true;
+        }
+        var routeData = _contextAccessor.HttpContext!.GetRouteData();
+
+        if (routeData.Values.TryGetValue("sensorId", out object? routeId))
+        {
+            var sensor = _sensorService.GetSensorById(routeId.ToString());
+
+            return context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value == sensor?.UserId;
+        }
+        else if (routeData.Values.TryGetValue("userId", out object? routeUserId))
+        {
+            return context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value == routeUserId?.ToString();
+        }
+
+        return false;
     }
 }

@@ -1,59 +1,43 @@
-﻿using AutoMapper;
-using BLL.Models;
-using BLL.Services.Interfaces;
-using JwtAuthorizationApi.Services.Auth;
-using JwtAuthorizationApi.Services.Auth.Authentication;
-using JwtAuthorizationApi.ViewModels;
+﻿using BLL.Services;
+using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JwtAuthorizationApi.Controllers;
 
-[Route("api/sensors")]
 [ApiController]
+[Route("api/[controller]")]
 public class SensorsController : ControllerBase
 {
-    private readonly IAuthService _authService;
-    private readonly IUsersService _service;
-    private readonly IMapper _mapper;
+    private readonly SensorsService _sensorService;
 
-    public SensorsController(
-        IUsersService service, 
-        IAuthService authService,
-        IMapper mapper)
+    public SensorsController(SensorsService sensorsService) => _sensorService = sensorsService;
+
+    [HttpPost]
+    public IActionResult Post(Sensor newSensor)
     {
-        _service = service;
-        _authService = authService;
-        _mapper = mapper;
+        _sensorService.CreateSensor(newSensor);
+        return Ok();
     }
 
-    
-    class Sensor
+    [HttpDelete("{id}")]
+    public IActionResult Delete([FromRoute] string id)
     {
-        public int Data { get; set; }
-        public DateTime Time { get; set; }
-    }
-    // GET: /Sensors
-    [HttpGet]
-    public IActionResult Get()
-    {
-        Random rnd = new Random();
-        Sensor[] s = new Sensor[100];
-        for (int i = 0; i < 100; i++)
-        {
-            s[i] = new Sensor()
-            {
-                Data = rnd.Next(0, 100),
-                Time = DateTime.Parse(DateTime.Now.AddMinutes(i).ToString("MM/dd/yyyy HH:mm:ss"))
-            };
-        }
-        return Ok(s);
+        return Ok(_sensorService.DeleteSensor(id));
     }
 
-    // GET /Sensors/5
-    [HttpGet("{id}")]
-    public string Get(Guid id)
+    [Authorize("sensor:read")]
+    [HttpGet("{userId}")]
+    public IActionResult GetUserSensors([FromRoute] string userId)
     {
-        return "Method not implemented";
+        return Ok(_sensorService.GetUserSensors(userId));
+    }
+
+    [Authorize("sensor:read")]
+    [HttpGet("~/api/sensor/{sensorId}")]
+    //[Route("")]
+    public IActionResult GetSensor([FromRoute] string sensorId)
+    {
+        return Ok(_sensorService.GetSensorById(sensorId));
     }
 }

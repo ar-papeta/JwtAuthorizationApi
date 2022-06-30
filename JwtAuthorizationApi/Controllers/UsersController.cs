@@ -6,6 +6,7 @@ using JwtAuthorizationApi.Services.Auth.Authentication;
 using JwtAuthorizationApi.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 
 namespace JwtAuthorizationApi.Controllers
 {
@@ -35,8 +36,15 @@ namespace JwtAuthorizationApi.Controllers
 
             var tokens = _authService.CreateNewTokenModel(user.Id.ToString(), user.Role.ToString());
 
-            Response.Cookies.Append("RefreshToken", tokens.RefreshToken, new CookieOptions() { HttpOnly = true });
-       
+            Response.Cookies.Append("RefreshToken", tokens.RefreshToken, new CookieOptions()
+            {
+                HttpOnly = true,
+                SameSite = SameSiteMode.None,
+                Secure = true,
+                Expires = DateTime.Now.AddDays(30d),
+                MaxAge = TimeSpan.FromDays(30),  
+            });
+
             return Ok(new AuthenticateResponce() 
             { 
                 AccessToken = tokens.AccessToken,
@@ -57,20 +65,25 @@ namespace JwtAuthorizationApi.Controllers
 
         // GET /Users/5
         [HttpGet("{id}")]
-        [Authorize("user:read")]
-        public string Get(Guid id)
+        [Authorize(Policy = "OnlyForAdmin")]
+        public IActionResult Get(string id)
         {
-            return "Method not implemented";
+            return Ok("Method not implemented");
         }
 
         // GET /Logout
-        [HttpGet()]
+        [HttpGet]
         [Route("~/api/logout")]
         public IActionResult Logout()
         {
             if (Request.Cookies.ContainsKey("RefreshToken"))
             {
-                Response.Cookies.Delete("RefreshToken", new CookieOptions() { Expires = DateTime.Now.AddDays(-1d) });
+                Response.Cookies.Delete("RefreshToken", new CookieOptions() { 
+                    Expires = DateTime.Now.AddDays(-1d), 
+                    SameSite = SameSiteMode.None,
+                    MaxAge = TimeSpan.FromDays(30),
+                    Secure = true,
+                });
             }
             return Ok();
         }
@@ -83,7 +96,14 @@ namespace JwtAuthorizationApi.Controllers
             var user = _service.CreateUser(userDto);
             var tokens = _authService.CreateNewTokenModel(user.Id.ToString(), user.Role.ToString());
 
-            Response.Cookies.Append("RefreshToken", tokens.RefreshToken, new CookieOptions() { HttpOnly = true });
+            Response.Cookies.Append("RefreshToken", tokens.RefreshToken, new CookieOptions() 
+            { 
+                HttpOnly = true, 
+                SameSite = SameSiteMode.None, 
+                Secure = true, 
+                Expires = DateTime.Now.AddDays(30d),
+                MaxAge = TimeSpan.FromDays(30),
+            });
             return Ok(new AuthenticateResponce()
             {
                 AccessToken = tokens.AccessToken,
@@ -92,25 +112,45 @@ namespace JwtAuthorizationApi.Controllers
         });
         }
 
-        // POST /Users
-        [HttpPost]
+        // GET /Users
+        [HttpGet]
         [Route("~/api/auth/refresh")]
-        public IActionResult Refresh([FromBody] RefreshRequest request)
+        public IActionResult Refresh()
         {
             TokenModel model = new()
             {
-                AccessToken = request.AccessToken
+                AccessToken = GetAccessTokenFromHeader()
             };
 
             if (Request.Cookies.ContainsKey("RefreshToken"))
             {
                 model.RefreshToken = Request.Cookies["RefreshToken"]!;
             }
+            else
+            {
+                throw new SecurityTokenException("Cookies does not contain a refresh token. (\"RefreshToken\")");
+            }
 
             var tokens = _authService.RefreshTokens(model);
 
-            Response.Cookies.Append("RefreshToken", tokens.RefreshToken, new CookieOptions() { HttpOnly = true });
+            Response.Cookies.Append("RefreshToken", tokens.RefreshToken, new CookieOptions() 
+            { 
+                HttpOnly = true, 
+                SameSite = SameSiteMode.None, 
+                Secure = true,
+                Expires = DateTime.Now.AddDays(30d),
+                MaxAge = TimeSpan.FromDays(30),
+            });
             return Ok(tokens);
+        }
+
+        private string GetAccessTokenFromHeader()
+        {
+            if(!Request.Headers.TryGetValue("Authorization", out var headerValue))
+            {
+                throw new SecurityTokenException("Headers does not contain a authorization token.");
+            }
+            return headerValue.ToString()[7..];
         }
 
 

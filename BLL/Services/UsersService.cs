@@ -4,22 +4,29 @@ using BLL.Services.CustomExceptions;
 using BLL.Services.Interfaces;
 using BLL.Services.PasswordHash;
 using DAL.Entities;
-using DAL.Uow;
+using DAL.Extensions;
+using DAL.Repositories;
+using Microsoft.Extensions.Options;
+using MongoDB.Bson;
+using System.Text;
 
 namespace BLL.Services
 {
     public class UsersService : IUsersService
     {
-        private readonly IUnitOfWork _database;
+        private readonly IMongoRepository<User> _database;
         private readonly IMapper _mapper;
         private readonly IPasswordHash _passwordHash;
 
         public UsersService(
-            IUnitOfWork database,
+            IMongoRepository<User> database,
             IMapper mapper,
+            IOptions<MongoDbConfig> dbOptions,
             IPasswordHash passwordHash)
         {
             _database = database;
+            _database.UseCollection(dbOptions.Value.UsersCollectionName);
+            //_database.SetFieldAsUnique("EMail");
             _mapper = mapper;
             _passwordHash = passwordHash;
         }
@@ -28,24 +35,23 @@ namespace BLL.Services
         {
             var user = _mapper.Map<UserDto, User>(userDto);
 
-            user.Id = Guid.NewGuid();
-            user.Password = _passwordHash.EncryptPassword(user.Password, user.Id.ToByteArray());
-            user.Role = RoleNames.User;
+            user.Id = ObjectId.GenerateNewId().ToString();
+            user.Password = _passwordHash.EncryptPassword(user.Password, Encoding.ASCII.GetBytes(user.Id));
+            user.Role = "User";
 
-            _database.Users.Insert(user);
-            _database.Save();
+            _database.InsertOne(user);
 
             return _mapper.Map<User, UserDto>(user);
         }
 
-        public UserDto EditUser(UserDto userDto, Guid id)
+        public UserDto EditUser(UserDto userDto, string id)
         {
             throw new NotImplementedException();
         }
 
         public IEnumerable<UserDto> GetUsers()
         {
-            var users = _database.Users.Get().ToList();
+            var users = _database.FilterBy().ToList();
             return _mapper.Map<List<User>, List<UserDto>>(users); 
         }
 
@@ -56,12 +62,12 @@ namespace BLL.Services
                 throw new UserValidationException("Access denied. Unresolved user from request body.");
             }
 
-            User user = _database.Users.Get(user =>
+            User user = _database.FilterBy(user =>
                 user.EMail == userDto.EMail)
-                ?.First() 
+                .FirstOrDefault() 
                 ?? throw new UserValidationException("Access denied. Unresolved email."); 
             
-            var incomingPasswordHash = _passwordHash.EncryptPassword(userDto.Password, user.Id.ToByteArray());
+            var incomingPasswordHash = _passwordHash.EncryptPassword(userDto.Password, Encoding.ASCII.GetBytes(user.Id));
 
             if (incomingPasswordHash != user.Password)
             {

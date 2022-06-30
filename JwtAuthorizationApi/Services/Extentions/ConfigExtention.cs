@@ -17,6 +17,6 @@ namespace JwtAuthorizationApi.Services.Extentions
         public static string GetJwtAudience(this IConfiguration configuration) => configuration.GetSection("Jwt:Audience").Value;
         public static string[] GetJwtPermissions(this IConfiguration configuration) => configuration.GetSection("JwtPermissions").Get<string[]>();
         public static string GetJwtInternalIssuer(this IConfiguration configuration) => configuration.GetSection("Jwt:InternalIssuer").Value;
-        public static string GetApiKey(this IConfiguration configuration) => configuration.GetSection("SecurityConfig:api_key").Value;
+        public static string GetApiKey(this IConfiguration configuration) => configuration.GetSection("api_key").Value;
     }
 }
