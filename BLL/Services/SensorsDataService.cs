@@ -16,6 +16,7 @@ public class SensorsDataService
     public void InsertSensorData(SensorData sensorData, string sensorId)
     {
         sensorData.Id = ObjectId.GenerateNewId().ToString();
+
         _db.UseCollection(sensorId).InsertOne(sensorData);
     }
 

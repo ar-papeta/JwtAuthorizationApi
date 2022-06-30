@@ -35,7 +35,6 @@ public class SensorsController : ControllerBase
 
     [Authorize("sensor:read")]
     [HttpGet("~/api/sensor/{sensorId}")]
-    //[Route("")]
     public IActionResult GetSensor([FromRoute] string sensorId)
     {
         return Ok(_sensorService.GetSensorById(sensorId));

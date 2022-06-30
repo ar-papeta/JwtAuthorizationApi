@@ -1,4 +1,5 @@
-﻿using DAL.Entities;
+﻿using AutoMapper;
+using DAL.Entities;
 using DAL.Extensions;
 using DAL.Repositories;
 using JwtAuthorizationApi.Services.Auth.Authentication;
@@ -17,15 +18,18 @@ namespace JwtAuthorizationApi.Services.Auth
         private readonly ITokenFactory _tokenFactory;
         private readonly IConfiguration _configuration;
         private readonly IMongoRepository<User> _database;
+        private readonly IMapper _mapper;
         public AuthService(
             ITokenFactory tokenFactory, 
             IConfiguration configuration,
             IMongoRepository<User> database,
+            IMapper mapper,
             IOptions<MongoDbConfig> dbOptions)
         {
             _tokenFactory = tokenFactory;
             _configuration = configuration;
             _database = database;
+            _mapper = mapper;
             _database.UseCollection(dbOptions.Value.UsersCollectionName);
         }
 
@@ -38,7 +42,7 @@ namespace JwtAuthorizationApi.Services.Auth
             };
         }
 
-        public TokenModel RefreshTokens(TokenModel tokenModel)
+        public AuthenticateResponce RefreshTokens(TokenModel tokenModel)
         {
             if (tokenModel is null)
             {
@@ -55,7 +59,15 @@ namespace JwtAuthorizationApi.Services.Auth
             var user = _database.FilterBy(x => x.Id == userId).FirstOrDefault() 
                 ?? throw new SecurityTokenException("The user with such id from token no longer exists");
 
-            return CreateNewTokenModel(user.Id, user.Role);
+            var tokens = CreateNewTokenModel(user.Id, user.Role);
+
+            return new AuthenticateResponce
+            {
+                AccessToken = tokens.AccessToken,
+                RefreshToken = tokens.RefreshToken,
+                UserViewModel = _mapper.Map<UserViewModel>(user)
+            };
+
         }
 
         private ClaimsPrincipal? GetPrincipalFromToken(string? token, string key, bool validateLifeTime)

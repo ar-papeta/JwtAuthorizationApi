@@ -42,7 +42,9 @@ namespace JwtAuthorizationApi.Controllers
                 SameSite = SameSiteMode.None,
                 Secure = true,
                 Expires = DateTime.Now.AddDays(30d),
-                MaxAge = TimeSpan.FromDays(30),  
+                MaxAge = TimeSpan.FromDays(30), 
+                IsEssential = true,
+                
             });
 
             return Ok(new AuthenticateResponce() 
@@ -83,6 +85,7 @@ namespace JwtAuthorizationApi.Controllers
                     SameSite = SameSiteMode.None,
                     MaxAge = TimeSpan.FromDays(30),
                     Secure = true,
+                    IsEssential = true,
                 });
             }
             return Ok();
@@ -103,6 +106,7 @@ namespace JwtAuthorizationApi.Controllers
                 Secure = true, 
                 Expires = DateTime.Now.AddDays(30d),
                 MaxAge = TimeSpan.FromDays(30),
+                IsEssential = true,
             });
             return Ok(new AuthenticateResponce()
             {
@@ -130,18 +134,18 @@ namespace JwtAuthorizationApi.Controllers
             {
                 throw new SecurityTokenException("Cookies does not contain a refresh token. (\"RefreshToken\")");
             }
-
-            var tokens = _authService.RefreshTokens(model);
-
-            Response.Cookies.Append("RefreshToken", tokens.RefreshToken, new CookieOptions() 
+            var response = _authService.RefreshTokens(model);
+            Response.Cookies.Append("RefreshToken", model.RefreshToken, new CookieOptions() 
             { 
                 HttpOnly = true, 
                 SameSite = SameSiteMode.None, 
                 Secure = true,
                 Expires = DateTime.Now.AddDays(30d),
                 MaxAge = TimeSpan.FromDays(30),
+                IsEssential = true,
             });
-            return Ok(tokens);
+            
+            return Ok(response);
         }
 
         private string GetAccessTokenFromHeader()
