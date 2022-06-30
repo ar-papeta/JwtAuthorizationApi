@@ -46,13 +46,20 @@ namespace BLL.Services
 
         public UserDto EditUser(UserDto userDto, string id)
         {
-            throw new NotImplementedException();
+            var user = _mapper.Map<UserDto, User>(userDto);
+            user.Id = id;
+            return _mapper.Map<User, UserDto>(user);
         }
 
         public IEnumerable<UserDto> GetUsers()
         {
             var users = _database.FilterBy().ToList();
             return _mapper.Map<List<User>, List<UserDto>>(users); 
+        }
+
+        public void DeleteUser(string userId)
+        {
+            _database.DeleteById(userId);
         }
 
         public UserDto ValidateUser(UserDto userDto)

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BLL.Models;
 using BLL.Services.Interfaces;
+using DAL.Entities;
 using JwtAuthorizationApi.Services.Auth;
 using JwtAuthorizationApi.Services.Auth.Authentication;
 using JwtAuthorizationApi.ViewModels;
@@ -15,15 +16,15 @@ namespace JwtAuthorizationApi.Controllers
     public class UsersController : ControllerBase
     {
         private readonly IAuthService _authService;
-        private readonly IUsersService _service;
+        private readonly IUsersService _userService;
         private readonly IMapper _mapper;
 
         public UsersController(
-            IUsersService service, 
+            IUsersService userService, 
             IAuthService authService,
             IMapper mapper)
         {
-            _service = service;
+            _userService = userService;
             _authService = authService;
             _mapper = mapper;
         }
@@ -32,7 +33,7 @@ namespace JwtAuthorizationApi.Controllers
         [Route("~/api/login")]
         public IActionResult ValidateUser([FromBody] AuthenticationRequest userAuthData)
         {
-            var user = _service.ValidateUser(_mapper.Map<UserDto>(userAuthData));
+            var user = _userService.ValidateUser(_mapper.Map<UserDto>(userAuthData));
 
             var tokens = _authService.CreateNewTokenModel(user.Id.ToString(), user.Role.ToString());
 
@@ -60,7 +61,7 @@ namespace JwtAuthorizationApi.Controllers
         [Authorize("user:read")]
         public IActionResult Get()
         {
-            var usersDto = _service.GetUsers();
+            var usersDto = _userService.GetUsers();
 
             return Ok(_mapper.Map<List<UserViewModel>>(usersDto));
         }
@@ -96,7 +97,7 @@ namespace JwtAuthorizationApi.Controllers
         [Route("~/api/registration")]
         public IActionResult Post([FromBody] UserDto userDto)
         {
-            var user = _service.CreateUser(userDto);
+            var user = _userService.CreateUser(userDto);
             var tokens = _authService.CreateNewTokenModel(user.Id.ToString(), user.Role.ToString());
 
             Response.Cookies.Append("RefreshToken", tokens.RefreshToken, new CookieOptions() 
@@ -158,16 +159,19 @@ namespace JwtAuthorizationApi.Controllers
         }
 
 
-        // PUT /Users/5
-        [HttpPut("{id}")]
-        public void Put(Guid id, [FromBody] string value)
+        // PATCH /Users/5
+        [HttpPatch("{userId}")]
+        public IActionResult Update([FromRoute] string userId, [FromBody] UserDto userDto)
         {
+            return Ok(_mapper.Map< UserDto, UserViewModel>(_userService.EditUser(userDto, userId)));
         }
 
         // DELETE /Users/5
         [HttpDelete("{id}")]
-        public void Delete(Guid id)
+        public IActionResult Delete([FromRoute] string userId)
         {
+            _userService.DeleteUser(userId);
+            return NoContent();
         }
     }
 }

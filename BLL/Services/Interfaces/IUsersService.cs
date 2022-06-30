@@ -13,5 +13,6 @@ namespace BLL.Services.Interfaces
         public IEnumerable<UserDto> GetUsers(); 
         public UserDto ValidateUser(UserDto userDto);
         public UserDto EditUser(UserDto userDto, string id);
+        public void DeleteUser(string userId);
     }
 }
