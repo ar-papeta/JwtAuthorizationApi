@@ -23,7 +23,6 @@ public class SensorsService
 
     public void CreateSensor(Sensor sensorDto)
     {
-        sensorDto.Name = GenerateSensorSerialNumber();
         _db.InsertOne(sensorDto);
     }
 
@@ -46,13 +45,5 @@ public class SensorsService
     public IEnumerable<Sensor> GetUserSensors(string userId)
     {
         return _db.FilterBy(x => x.UserId.Equals(userId));
-    }
-
-    private static string GenerateSensorSerialNumber()
-    {
-        var user = "Artem";
-        var device = "Test";
-        var serialNumber = user + device + ObjectId.GenerateNewId().ToString();
-        return serialNumber;
     }
 }
