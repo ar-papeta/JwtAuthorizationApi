@@ -14,6 +14,7 @@ public class SensorsController : ControllerBase
     public SensorsController(SensorsService sensorsService) => _sensorService = sensorsService;
 
     [HttpPost]
+    [Authorize]
     public IActionResult Post(Sensor newSensor)
     {
         _sensorService.CreateSensor(newSensor);
@@ -21,6 +22,7 @@ public class SensorsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize("sensor:read")]
     public IActionResult Delete([FromRoute] string id)
     {
         return Ok(_sensorService.DeleteSensor(id));

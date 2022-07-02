@@ -15,17 +15,18 @@ public class SensorDataApiMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        if(!context.Request.Headers.TryGetValue("api_key", out StringValues actualKey))
+        if(context.Request.Path.StartsWithSegments("/api/sensorsdata") && context.Request.Method is "POST")
         {
-            context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
-            throw new Exception($"Request headers does not contain \"api_key\" header.");
-            //return;
-        }
-        if (actualKey != _apiKey)
-        {
-            context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
-            throw new Exception("Wrong api key, access denied.");
-            //return;
+            if (!context.Request.Headers.TryGetValue("api_key", out StringValues actualKey))
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+                throw new Exception($"Request headers does not contain \"api_key\" header.");
+            }
+            if (actualKey != _apiKey)
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+                throw new Exception("Wrong api key, access denied.");
+            }
         }
         await _next(context);
     }

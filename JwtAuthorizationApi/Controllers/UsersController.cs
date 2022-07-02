@@ -74,8 +74,26 @@ namespace JwtAuthorizationApi.Controllers
             return Ok("Method not implemented");
         }
 
+        // PATCH /Users/5
+        [HttpPatch("{userId}")]
+        [Authorize("user:write")]
+        public IActionResult Update([FromRoute] string userId, [FromBody] UserDto userDto)
+        {
+            return Ok(_mapper.Map<UserDto, UserViewModel>(_userService.EditUser(userDto, userId)));
+        }
+
+        // DELETE /Users/5
+        [HttpDelete("{userId}")]
+        [Authorize("user:write")]
+        public IActionResult Delete([FromRoute] string userId)
+        {
+            _userService.DeleteUser(userId);
+            return NoContent();
+        }
+
         // GET /Logout
         [HttpGet]
+        [Authorize]
         [Route("~/api/logout")]
         public IActionResult Logout()
         {
@@ -117,8 +135,10 @@ namespace JwtAuthorizationApi.Controllers
         });
         }
 
+
         // GET /Users
         [HttpGet]
+        [Authorize]
         [Route("~/api/auth/refresh")]
         public IActionResult Refresh()
         {
@@ -156,22 +176,6 @@ namespace JwtAuthorizationApi.Controllers
                 throw new SecurityTokenException("Headers does not contain a authorization token.");
             }
             return headerValue.ToString()[7..];
-        }
-
-
-        // PATCH /Users/5
-        [HttpPatch("{userId}")]
-        public IActionResult Update([FromRoute] string userId, [FromBody] UserDto userDto)
-        {
-            return Ok(_mapper.Map< UserDto, UserViewModel>(_userService.EditUser(userDto, userId)));
-        }
-
-        // DELETE /Users/5
-        [HttpDelete("{id}")]
-        public IActionResult Delete([FromRoute] string userId)
-        {
-            _userService.DeleteUser(userId);
-            return NoContent();
         }
     }
 }

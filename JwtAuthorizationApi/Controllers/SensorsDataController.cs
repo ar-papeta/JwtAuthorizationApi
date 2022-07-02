@@ -23,5 +23,8 @@ public class SensorsDataController : ControllerBase
 
     [Authorize("sensor:read")]
     [HttpGet("{sensorId}/{period?}")]
-    public IActionResult Get([FromRoute] string sensorId, [FromRoute] string? period) => Ok(_sensorDataService.GetSensorDataFromPeriod(sensorId, period));
+    public IActionResult Get([FromRoute] string sensorId, [FromRoute] string? period)
+    {
+        return Ok(_sensorDataService.GetSensorDataFromPeriod(sensorId, period));
+    }
 }

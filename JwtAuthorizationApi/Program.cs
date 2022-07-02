@@ -70,12 +70,12 @@ var app = builder.Build();
 app.UseHttpsRedirection();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseMiddleware<SensorDataApiMiddleware>(builder.Configuration.GetApiKey());
 
-app.MapWhen(context => context.Request.Path.StartsWithSegments("/api/sensorsdata") && context.Request.Method is "POST", sensorDataApi =>
-{
-    sensorDataApi.UseMiddleware<SensorDataApiMiddleware>(builder.Configuration.GetApiKey());
-});
-        
+//app.MapWhen(context => context.Request.Path.StartsWithSegments("/api/sensorsdata") && context.Request.Method is "POST", sensorDataApi =>
+//{
+//    sensorDataApi.UseMiddleware<SensorDataApiMiddleware>(builder.Configuration.GetApiKey());
+//});
 
 //if (app.Environment.IsDevelopment())
 //{
@@ -99,5 +99,7 @@ app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllers();
 });
+
+
 
 app.Run();
