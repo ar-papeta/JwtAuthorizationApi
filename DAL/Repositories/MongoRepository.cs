@@ -93,8 +93,15 @@ public class MongoRepository<TDocument> : IMongoRepository<TDocument> where TDoc
     public TDocument ReplaceOne(TDocument document)
     {
         var filter = Builders<TDocument>.Filter.Eq(doc => doc.Id, document.Id);
-        return _collection.FindOneAndReplace(filter, document);
+        return _collection.FindOneAndReplace(
+            filter, 
+            document,
+            new FindOneAndReplaceOptions<TDocument, TDocument>
+            {
+                 ReturnDocument = ReturnDocument.After
+            });
     }
+
 
     public void SetFieldAsUnique(string fieldName)
     {

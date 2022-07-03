@@ -79,7 +79,11 @@ namespace JwtAuthorizationApi.Controllers
         [Authorize("user:self")]
         public IActionResult Update([FromRoute] string userId, [FromBody] UserDto userDto)
         {
-            return Ok(_mapper.Map<UserDto, UserViewModel>(_userService.EditUser(userDto, userId)));
+            if(userDto.Id != userId)
+            {
+                return BadRequest("Change user id not allowed");
+            }
+            return Ok(_mapper.Map<UserDto, UserViewModel>(_userService.EditUser(userDto)));
         }
 
         // DELETE /Users/5

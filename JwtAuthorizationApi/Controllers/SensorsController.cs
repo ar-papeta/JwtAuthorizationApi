@@ -21,11 +21,20 @@ public class SensorsController : ControllerBase
         return Ok();
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{sensorId}")]
     [Authorize("sensor:read")]
-    public IActionResult Delete([FromRoute] string id)
+    public IActionResult Delete([FromRoute] string sensorId)
     {
-        return Ok(_sensorService.DeleteSensor(id));
+        return Ok(_sensorService.DeleteSensor(sensorId));
+    }
+
+    [HttpPatch("{sensorId}")]
+    [Authorize("sensor:read")]
+    public IActionResult Patch([FromBody] Sensor patchSensor, [FromRoute] string sensorId)
+    {
+        if (sensorId != patchSensor.Id)
+            return BadRequest("Change sensor id is not allowed");
+        return Ok(_sensorService.UpdateSensor(patchSensor));
     }
 
     [Authorize("sensor:read")]

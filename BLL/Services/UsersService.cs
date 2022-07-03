@@ -44,10 +44,10 @@ namespace BLL.Services
             return _mapper.Map<User, UserDto>(user);
         }
 
-        public UserDto EditUser(UserDto userDto, string id)
+        public UserDto EditUser(UserDto userDto)
         {
             var user = _mapper.Map<UserDto, User>(userDto);
-            user.Id = id;
+            _database.ReplaceOne(user);
             return _mapper.Map<User, UserDto>(user);
         }
 
