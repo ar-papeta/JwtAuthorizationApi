@@ -14,5 +14,6 @@ namespace BLL.Services.Interfaces
         public UserDto ValidateUser(UserDto userDto);
         public UserDto EditUser(UserDto userDto, string id);
         public void DeleteUser(string userId);
+        public UserDto GetUserById(string userId);
     }
 }

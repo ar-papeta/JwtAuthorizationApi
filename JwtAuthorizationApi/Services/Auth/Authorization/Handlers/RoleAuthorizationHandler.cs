@@ -60,7 +60,7 @@ public class RoleAuthorizationHandler : AuthorizationHandler<RoleAuthorizationRe
             return true;
         }
         var routeData = _contextAccessor.HttpContext!.GetRouteData();
-        if (routeData.Values.TryGetValue("id", out object? identifierValue))
+        if (routeData.Values.TryGetValue("userId", out object? identifierValue))
         {
             return identifierValue?.ToString() == context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         }

@@ -67,11 +67,11 @@ namespace JwtAuthorizationApi.Controllers
         }
 
         // GET /Users/5
-        [HttpGet("{id}")]
+        [HttpGet("{userId}")]
         [Authorize(Policy = "OnlyForAdmin")]
-        public IActionResult Get(string id)
+        public IActionResult Get(string userId)
         {
-            return Ok("Method not implemented");
+            return Ok(_mapper.Map<UserDto, UserViewModel>(_userService.GetUserById(userId)));
         }
 
         // PATCH /Users/5

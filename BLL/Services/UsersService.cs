@@ -51,6 +51,12 @@ namespace BLL.Services
             return _mapper.Map<User, UserDto>(user);
         }
 
+        public UserDto GetUserById(string userId)
+        {
+            var user = _database.FindById(userId);
+            return _mapper.Map<User, UserDto>(user);
+        }
+
         public IEnumerable<UserDto> GetUsers()
         {
             var users = _database.FilterBy().ToList();
