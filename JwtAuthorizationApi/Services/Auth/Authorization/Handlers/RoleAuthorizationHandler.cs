@@ -28,7 +28,7 @@ public class RoleAuthorizationHandler : AuthorizationHandler<RoleAuthorizationRe
 
             if (rolePermissions.Contains(requirement.Permission))
             {
-                if (requirement.Permission == "user:write")
+                if (requirement.Permission == "user:self")
                 {
                     if (IsUserEditAuthorized(context))
                     {

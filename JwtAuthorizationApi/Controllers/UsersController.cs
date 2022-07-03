@@ -58,7 +58,7 @@ namespace JwtAuthorizationApi.Controllers
 
         // GET: /Users
         [HttpGet]
-        [Authorize("user:read")]
+        [Authorize(Policy = "OnlyForAdmin")]
         public IActionResult Get()
         {
             var usersDto = _userService.GetUsers();
@@ -68,7 +68,7 @@ namespace JwtAuthorizationApi.Controllers
 
         // GET /Users/5
         [HttpGet("{userId}")]
-        [Authorize(Policy = "OnlyForAdmin")]
+        [Authorize("user:read")]
         public IActionResult Get(string userId)
         {
             return Ok(_mapper.Map<UserDto, UserViewModel>(_userService.GetUserById(userId)));
@@ -76,7 +76,7 @@ namespace JwtAuthorizationApi.Controllers
 
         // PATCH /Users/5
         [HttpPatch("{userId}")]
-        [Authorize("user:write")]
+        [Authorize("user:self")]
         public IActionResult Update([FromRoute] string userId, [FromBody] UserDto userDto)
         {
             return Ok(_mapper.Map<UserDto, UserViewModel>(_userService.EditUser(userDto, userId)));
@@ -84,7 +84,7 @@ namespace JwtAuthorizationApi.Controllers
 
         // DELETE /Users/5
         [HttpDelete("{userId}")]
-        [Authorize("user:write")]
+        [Authorize("user:self")]
         public IActionResult Delete([FromRoute] string userId)
         {
             _userService.DeleteUser(userId);
