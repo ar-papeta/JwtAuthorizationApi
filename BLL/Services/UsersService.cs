@@ -46,8 +46,20 @@ namespace BLL.Services
 
         public UserDto EditUser(UserDto userDto)
         {
-            var user = _mapper.Map<UserDto, User>(userDto);
+            var user = _database.FindById(userDto.Id);
+
+            if (userDto.EMail != null)
+            {
+                user.EMail = userDto.EMail;
+            }
+
+            if (userDto.Name != null)
+            {
+                user.Name = userDto.Name;
+            }
+
             _database.ReplaceOne(user);
+
             return _mapper.Map<User, UserDto>(user);
         }
 

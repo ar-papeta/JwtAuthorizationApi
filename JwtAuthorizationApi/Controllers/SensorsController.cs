@@ -1,5 +1,7 @@
-﻿using BLL.Services;
+﻿using AutoMapper;
+using BLL.Services;
 using DAL.Entities;
+using JwtAuthorizationApi.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,8 +12,13 @@ namespace JwtAuthorizationApi.Controllers;
 public class SensorsController : ControllerBase
 {
     private readonly SensorsService _sensorService;
+    private readonly IMapper _mapper;
 
-    public SensorsController(SensorsService sensorsService) => _sensorService = sensorsService;
+    public SensorsController(SensorsService sensorsService, IMapper mapper)
+    {
+        _sensorService = sensorsService;
+        _mapper = mapper;
+    }
 
     [HttpPost]
     [Authorize]
@@ -30,10 +37,11 @@ public class SensorsController : ControllerBase
 
     [HttpPatch("{sensorId}")]
     [Authorize("sensor:read")]
-    public IActionResult Patch([FromBody] Sensor patchSensor, [FromRoute] string sensorId)
+    public IActionResult Patch([FromBody] EditSensorRequestModel model, [FromRoute] string sensorId)
     {
-        if (sensorId != patchSensor.Id)
-            return BadRequest("Change sensor id is not allowed");
+        var patchSensor = _mapper.Map<Sensor>(model);
+        patchSensor.Id = sensorId;
+
         return Ok(_sensorService.UpdateSensor(patchSensor));
     }
 

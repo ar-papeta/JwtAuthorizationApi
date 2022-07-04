@@ -19,5 +19,9 @@ public class MappingProfile : Profile
         CreateMap<UserDto, AuthenticationRequest>();
 
         CreateMap<User,UserViewModel>();
+        CreateMap<EditUserRequestModel, UserDto>();
+
+        CreateMap<Sensor, EditSensorRequestModel>();
+        CreateMap<EditSensorRequestModel, Sensor>();
     }
 }

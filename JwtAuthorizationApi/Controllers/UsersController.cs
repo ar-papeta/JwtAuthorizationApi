@@ -77,12 +77,10 @@ namespace JwtAuthorizationApi.Controllers
         // PATCH /Users/5
         [HttpPatch("{userId}")]
         [Authorize("user:self")]
-        public IActionResult Update([FromRoute] string userId, [FromBody] UserDto userDto)
+        public IActionResult Update([FromRoute] string userId, [FromBody] EditUserRequestModel model)
         {
-            if(userDto.Id != userId)
-            {
-                return BadRequest("Change user id not allowed");
-            }
+            var userDto = _mapper.Map<UserDto>(model);
+            userDto.Id = userId;
             return Ok(_mapper.Map<UserDto, UserViewModel>(_userService.EditUser(userDto)));
         }
 

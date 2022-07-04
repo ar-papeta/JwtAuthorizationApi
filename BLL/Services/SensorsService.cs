@@ -34,7 +34,17 @@ public class SensorsService
 
     public Sensor UpdateSensor(Sensor sensor)
     {
-        return _db.ReplaceOne(sensor);
+        var newSensor = _db.FindById(sensor.Id);
+        if(sensor.Description is not null)
+        {
+            newSensor.Description = sensor.Description;
+        }
+        if (sensor.Name is not null)
+        {
+            newSensor.Name = sensor.Name;
+        }
+
+        return _db.ReplaceOne(newSensor);
     }
 
     public Sensor GetSensorById(string id)
