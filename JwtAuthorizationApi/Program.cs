@@ -89,7 +89,7 @@ app.UseSwagger();
 
 app.UseRouting();
 
-app.UseCors(cors => cors.AllowAnyHeader().AllowAnyMethod().AllowCredentials().WithOrigins("http://localhost:3000", "https://bootstrap--elegant-monstera-50c11a.netlify.app/"));
+app.UseCors(cors => cors.AllowAnyHeader().AllowAnyMethod().AllowCredentials().WithOrigins("http://localhost:3000", "https://bootstrap--elegant-monstera-50c11a.netlify.app"));
 
 app.UseAuthentication();
 
