@@ -140,7 +140,6 @@ namespace JwtAuthorizationApi.Controllers
 
         // GET /Users
         [HttpGet]
-        [Authorize]
         [Route("~/api/auth/refresh")]
         public IActionResult Refresh()
         {
