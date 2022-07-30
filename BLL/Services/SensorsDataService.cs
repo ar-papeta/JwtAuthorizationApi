@@ -20,9 +20,9 @@ public class SensorsDataService
         _db.UseCollection(sensorId).InsertOne(sensorData);
     }
 
-    public IEnumerable<SensorData> GetSensorDataFromPeriod(string sensorId, string period)
+    public IEnumerable<SensorData> GetSensorDataFromPeriod(string sensorId, string? period)
     {
-        var p = period?.ToLower() ?? String.Empty;      
+        var p = period?.ToLower() ?? string.Empty;      
         return p switch
         {
             "" => _db.UseCollection(sensorId).FilterBy(t => t.Time.CompareTo(DateTime.Now.AddDays(-1)) >= 0),
