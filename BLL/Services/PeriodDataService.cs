@@ -12,11 +12,15 @@ internal class PeriodDataService
     private readonly List<SensorData> _optimizedData = new();
     private List<SensorData> _periodData = new();
     private readonly TimeSpan _sensorDataIntervalDefault = TimeSpan.FromSeconds(30);
+    private TimeSpan _optimizedInterval;
+    private SensorData _sensorDataTemplate;
 
     public PeriodDataService(IMongoRepository<SensorData> db, IOptions<MongoDbConfig> dbOptions)
     {
         _dbOptions = dbOptions;
         _db = db;
+        _optimizedInterval = _sensorDataIntervalDefault;
+
     }
 
     public IEnumerable<SensorData> GetSensorDataFromPeriod(string sensorId, string period)
@@ -81,11 +85,20 @@ internal class PeriodDataService
         return _db.UseCollection(sensorId).FilterBy();
     }
 
-    public IEnumerable<SensorData> GetSensorDataFromPeriod(string sensorId, DateTime from, DateTime to, int dataCount)
+    private void LoadAllDataForPeriod(DateTime from, DateTime to, string sensorId)
     {
         _periodData = _db.UseCollection(sensorId).FilterBy(t => t.Time.CompareTo(from) >= 0 && t.Time.CompareTo(to) < 0).ToList();
+    }
 
-        
+    public IEnumerable<SensorData> GetSensorDataFromPeriod(string sensorId, DateTime from, DateTime to, int dataCount)
+    {
+        LoadAllDataForPeriod(from, to, sensorId);
+
+        if (!IsSensorDataForTamplate())
+        {
+            return Enumerable.Empty<SensorData>();
+        }
+
         var interval = (to - from) / dataCount;
 
         //TO DO: MIGRATE for this implpementation
@@ -98,73 +111,53 @@ internal class PeriodDataService
             interval = _sensorDataIntervalDefault;
             dataCount = (int)((from - to) / interval); 
         }
+        _optimizedInterval = interval;
 
-        SensorData? firstData = default;
-        if(!TrySetFirstData(from, to, out firstData))
+        for (int i = 0; i < dataCount; i++)
         {
-            if(firstData is null)
-            {
-                return new List<SensorData>();
-            }
-
-            var lastData = SetZeroDataWithTime(firstData, to); //TO DO check if work wrong (ref copy)
-
-            _optimizedData.Add(firstData);
-            _optimizedData.Add(lastData);
-            return _optimizedData;
-        }
-
-        _optimizedData.Add(firstData);
-        for (int i = 1; i < dataCount; i++)
-        {
-            if ()
-            {
-
-            }
-            _optimizedData[i] = _periodData.OrderBy(x => x.Time - (_optimizedData[i - 1].Time + interval * i)).First();
+            var localInterval = from + interval * i;
+            _optimizedData.Add(GetNextData(localInterval, localInterval.Add(interval)));
         }
 
         return _optimizedData;
     }
 
-    private bool TrySetFirstData(DateTime from, DateTime to, out SensorData? firstData)
+    private bool IsSensorDataForTamplate()
     {
-        firstData = default;
-
-        if (!_periodData.Any(t => t.Time.CompareTo(from) >= 0 && t.Time.CompareTo(to) < 0))
-        {
-            firstData = _periodData.FirstOrDefault();
-
-            if (firstData is not null)
-            {
-                firstData = SetZeroDataWithTime(firstData, from);
-            }
-            return false;
-        }
-
-        firstData = FindNearestDataTo(from);
-
-        if(firstData.Time > from.Add(_sensorDataIntervalDefault))
-        {
-            firstData = SetZeroDataWithTime(firstData, from);
-        }
-
-        return true;
-
+        _sensorDataTemplate = _periodData.FirstOrDefault();
         
-
+        return _sensorDataTemplate is not null;
+    }
+    private bool IsSensorData(DateTime from, DateTime to)
+    {
+        return _periodData.Any(x => x.Time < to && x.Time > from);
     }
 
-    private SensorData FindNearestDataTo(DateTime time)
+    private SensorData GetNextData(DateTime from, DateTime to)
     {
-        return _periodData.MinBy(x => x.Time - time) 
-            ?? throw new Exception("No content for this date period (can not find nearest data)");
+        if (!IsSensorData(from, to))
+        {
+            return SetZeroDataWithTime(from);
+        }
+
+        var nextData = FindNearestDataBefore(from, from.Add(_optimizedInterval));
+
+        if(nextData is null)
+        {
+            nextData = SetZeroDataWithTime(from);
+        }
+
+        return nextData;
     }
 
-    private static SensorData SetZeroDataWithTime(SensorData dataTemplate, DateTime time)
+    private SensorData? FindNearestDataBefore(DateTime from, DateTime to)
     {
-        SensorData zeroClone = (SensorData)dataTemplate.Clone();
+        return _periodData.Where(x => x.Time < to && x.Time > from).MinBy(x => x.Time - to);
+    }
 
+    private SensorData SetZeroDataWithTime(DateTime time)
+    {
+        SensorData zeroClone = (SensorData)_sensorDataTemplate.Clone();
         zeroClone.Time = time;
 
         foreach (var data in zeroClone.Measurements)
