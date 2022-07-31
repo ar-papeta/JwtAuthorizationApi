@@ -13,6 +13,7 @@ public static class DependencyInjection
         services.AddScoped<IPasswordHash, PasswordHash>();
         services.AddScoped<SensorsService>();
         services.AddScoped<SensorsDataService>();
+        services.AddScoped<IPeriodDataService, PeriodDataService>();
         return services;
     }
 }

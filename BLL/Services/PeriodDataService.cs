@@ -1,11 +1,12 @@
-﻿using DAL.Entities;
+﻿using BLL.Services.Interfaces;
+using DAL.Entities;
 using DAL.Extensions;
 using DAL.Repositories;
 using Microsoft.Extensions.Options;
 
 namespace BLL.Services;
 
-internal class PeriodDataService
+internal class PeriodDataService : IPeriodDataService
 {
     private readonly IOptions<MongoDbConfig> _dbOptions;
     private readonly IMongoRepository<SensorData> _db;
@@ -13,7 +14,7 @@ internal class PeriodDataService
     private List<SensorData> _periodData = new();
     private readonly TimeSpan _sensorDataIntervalDefault = TimeSpan.FromSeconds(30);
     private TimeSpan _optimizedInterval;
-    private SensorData _sensorDataTemplate;
+    private SensorData? _sensorDataTemplate;
 
     public PeriodDataService(IMongoRepository<SensorData> db, IOptions<MongoDbConfig> dbOptions)
     {
@@ -87,7 +88,7 @@ internal class PeriodDataService
 
     private void LoadAllDataForPeriod(DateTime from, DateTime to, string sensorId)
     {
-        _periodData = _db.UseCollection(sensorId).FilterBy(t => t.Time.CompareTo(from) >= 0 && t.Time.CompareTo(to) < 0).ToList();
+        _periodData = _db.UseCollection(sensorId).FilterBy(t => t.Time > from && t.Time < to).ToList();
     }
 
     public IEnumerable<SensorData> GetSensorDataFromPeriod(string sensorId, DateTime from, DateTime to, int dataCount)
@@ -106,7 +107,7 @@ internal class PeriodDataService
         var sensorUpdatePeriod = _db.UseCollection(_dbOptions.Value.SensorsCollectionName).FindById(sensorId).UpdatePeriod;
         */
 
-        if (_sensorDataIntervalDefault < interval)
+        if (_sensorDataIntervalDefault > interval)
         {
             interval = _sensorDataIntervalDefault;
             dataCount = (int)((from - to) / interval); 
@@ -115,7 +116,7 @@ internal class PeriodDataService
 
         for (int i = 0; i < dataCount; i++)
         {
-            var localInterval = from + interval * i;
+            var localInterval = from + interval * (i);
             _optimizedData.Add(GetNextData(localInterval, localInterval.Add(interval)));
         }
 
@@ -152,7 +153,7 @@ internal class PeriodDataService
 
     private SensorData? FindNearestDataBefore(DateTime from, DateTime to)
     {
-        return _periodData.Where(x => x.Time < to && x.Time > from).MinBy(x => x.Time - to);
+        return _periodData.Where(x => x.Time < to && x.Time > from).MinBy(x => to - x.Time);
     }
 
     private SensorData SetZeroDataWithTime(DateTime time)

@@ -23,8 +23,15 @@ public class SensorsDataController : ControllerBase
 
     [Authorize("sensor:read")]
     [HttpGet("{sensorId}/{period?}")]
-    public IActionResult Get([FromRoute] string sensorId, [FromRoute] string? period)
+    public IActionResult GetDataFromFixPeriod([FromRoute] string sensorId, [FromRoute] string? period)
     {
         return Ok(_sensorDataService.GetSensorDataFromPeriod(sensorId, period));
+    }
+
+    [Authorize("sensor:read")]
+    [HttpGet("{sensorId}")]
+    public IActionResult GetData(string sensorId, DateTime from, DateTime to, int dataCount)
+    {
+        return Ok(_sensorDataService.GetSensorDataFromPeriod(sensorId, from, to, dataCount));
     }
 }
