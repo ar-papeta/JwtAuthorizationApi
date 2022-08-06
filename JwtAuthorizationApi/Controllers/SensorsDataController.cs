@@ -1,4 +1,5 @@
 ﻿using BLL.Services;
+using BLL.Services.Interfaces;
 using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -10,9 +11,9 @@ namespace JwtAuthorizationApi.Controllers;
 [Route("api/[controller]")]
 public class SensorsDataController : ControllerBase
 {
-    private readonly SensorsDataService _sensorDataService;
+    private readonly ISensorsDataService _sensorDataService;
 
-    public SensorsDataController(SensorsDataService sensorsDataService) => _sensorDataService = sensorsDataService;
+    public SensorsDataController(ISensorsDataService sensorsDataService) => _sensorDataService = sensorsDataService;
 
     [HttpPost("{sensorId}")]
     public IActionResult Post([FromRoute] string sensorId, [FromBody] SensorData sensorsData)

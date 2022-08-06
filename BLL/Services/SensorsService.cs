@@ -1,17 +1,12 @@
-﻿using DAL.Entities;
+﻿using BLL.Services.Interfaces;
+using DAL.Entities;
 using DAL.Extensions;
 using DAL.Repositories;
 using Microsoft.Extensions.Options;
-using MongoDB.Bson;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BLL.Services;
 
-public class SensorsService
+public class SensorsService : ISensorsService
 {
     private readonly IMongoRepository<Sensor> _db;
 

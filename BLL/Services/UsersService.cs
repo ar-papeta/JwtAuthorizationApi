@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using BLL.Models;
-using BLL.Services.CustomExceptions;
+using BLL.CustomExceptions;
 using BLL.Services.Interfaces;
 using BLL.Services.PasswordHash;
 using DAL.Entities;
